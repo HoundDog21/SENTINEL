@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 15, "text": "Process tree is correct: explorer.exe (no process-create event) → control.exe → rundll32.exe (System32) → rundll32.exe (SysWOW64) → wscript.exe" },
+    { "points": 15, "text": "Explained that a .cpl is a DLL run through control.exe and rundll32 Control_RunDLL, and that the second, 32-bit rundll32 (shell32 #44) is Windows' normal handling of a 32-bit applet, not a separate attack stage" },
+    { "points": 15, "text": "Identified wscript.exe running info.txt with /e:JScript.Encode as an encoded script disguised with a .txt extension" },
+    { "points": 10, "text": "Noticed wscript's CommandLine says System32 but its Image is SysWOW64, and explained it as WOW64 redirection rather than spoofing" },
+    { "points": 10, "text": "Used the PCA Event ID 17 at 21:11:17 to corroborate the .cpl ran, and treated the procexp64.exe PCA events as unrelated or unexplained, not attacker activity" },
+    { "points": 10, "text": "Noticed the .cpl's CreationUtcTime (21:09:48) is earlier than the write (21:11:11), without claiming to know how the file arrived" },
+    { "points": 10, "text": "Noticed Sysmon record 4862 is missing and concluded the export is partial" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. how the .cpl arrived, who wrote info.txt, what wscript did next)" },
+    { "points": 5,  "text": "Classified it as a true positive and recommended isolating the host and collecting the .cpl and info.txt" }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "company": "Ironlantern Security",
+  "tagline": "Managed detection & response · We keep the light on",
+  "analyst": "Cody",
+  "ranks": [
+    { "xp": 0,   "title": "New Hire (Probation)" },
+    { "xp": 60,  "title": "SOC Analyst I" },
+    { "xp": 180, "title": "SOC Analyst II" },
+    { "xp": 350, "title": "Senior SOC Analyst" },
+    { "xp": 550, "title": "Incident Responder" },
+    { "xp": 800, "title": "IR Lead" }
+  ],
+  "chapters": [
+    {
+      "n": 1,
+      "case": "01-unpaid-invoice",
+      "title": "First Watch",
+      "teaser": "Your first night shift. A front-desk PC, an overdue invoice, and an alert the client is sure is nothing.",
+      "difficulty": "Beginner"
+    },
+    {
+      "n": 2,
+      "case": null,
+      "title": "Echoes in the Scheduler",
+      "teaser": "Another client, another rundll32 that shouldn't be there. This time, something survives a reboot.",
+      "difficulty": "Beginner+"
+    },
+    {
+      "n": 3,
+      "case": null,
+      "title": "Living off the Land",
+      "teaser": "A trusted Windows tool is fetching instructions from somewhere it shouldn't.",
+      "difficulty": "Intermediate"
+    },
+    {
+      "n": 4,
+      "case": null,
+      "title": "Lateral Thinking",
+      "teaser": "Two hosts, one set of credentials, and a logon nobody can explain.",
+      "difficulty": "Intermediate+"
+    },
+    {
+      "n": 5,
+      "case": null,
+      "title": "The Lantern Goes Dark",
+      "teaser": "The alert is coming from inside Ironlantern.",
+      "difficulty": "Advanced"
+    }
+  ]
+}

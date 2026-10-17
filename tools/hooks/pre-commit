@@ -1,0 +1,6 @@
+#!/bin/sh
+# Installed by `./sentinel test --install-hook`. Runs the fast test suite before each commit.
+# Skip once with: git commit --no-verify
+cd "$(git rev-parse --show-toplevel)" || exit 1
+echo "Running ./sentinel test --fast before commit…"
+./sentinel test --fast --quiet || { echo; echo "Tests failed: commit stopped. Fix them, or commit with --no-verify to skip."; exit 1; }

@@ -1,0 +1,250 @@
+{
+  "_about": "Event labels, IOC field types and table-column fields for SENTINEL. Edit this file to support a new log source. No code changes needed. Channels match case-insensitively: 'exact' compares the whole channel name, 'contains' a substring. First match wins.",
+  "channels": [
+    {
+      "name": "Sysmon",
+      "contains": "sysmon",
+      "fallback": "Sysmon event",
+      "ids": {
+        "1": "Process create",
+        "2": "File time changed",
+        "3": "Network connection",
+        "4": "Sysmon state",
+        "5": "Process terminated",
+        "6": "Driver loaded",
+        "7": "Image loaded",
+        "8": "CreateRemoteThread",
+        "9": "Raw disk read",
+        "10": "Process access",
+        "11": "File create",
+        "12": "Registry key create/delete",
+        "13": "Registry value set",
+        "14": "Registry rename",
+        "15": "File stream created",
+        "16": "Sysmon config change",
+        "17": "Pipe created",
+        "18": "Pipe connected",
+        "19": "WMI filter",
+        "20": "WMI consumer",
+        "21": "WMI binding",
+        "22": "DNS query",
+        "23": "File delete",
+        "24": "Clipboard change",
+        "25": "Process tampering",
+        "26": "File delete logged",
+        "27": "File block exe",
+        "29": "File exe detected"
+      }
+    },
+    {
+      "name": "PowerShell",
+      "contains": "powershell",
+      "fallback": "PowerShell event",
+      "ids": {
+        "400": "Engine started",
+        "403": "Engine stopped",
+        "600": "Provider started",
+        "800": "Pipeline executed",
+        "4103": "Module logging",
+        "4104": "Script block",
+        "4105": "Script block started",
+        "4106": "Script block stopped"
+      }
+    },
+    {
+      "name": "Task Scheduler",
+      "contains": "taskscheduler",
+      "fallback": "Task Scheduler event",
+      "ids": {
+        "106": "Task registered",
+        "140": "Task updated",
+        "141": "Task deleted",
+        "129": "Task process created",
+        "200": "Task action started",
+        "201": "Task action completed"
+      }
+    },
+    {
+      "name": "Defender",
+      "contains": "windows defender",
+      "fallback": "Defender event",
+      "ids": {
+        "1116": "Malware detected",
+        "1117": "Malware action taken",
+        "5001": "Real-time protection disabled",
+        "5007": "Config changed"
+      }
+    },
+    {
+      "name": "WMI",
+      "contains": "wmi-activity",
+      "fallback": "WMI event",
+      "ids": {
+        "5857": "WMI provider loaded",
+        "5860": "Temporary WMI subscription",
+        "5861": "Permanent WMI subscription"
+      }
+    },
+    {
+      "name": "Program Compatibility Assistant",
+      "contains": "program-compatibility-assistant",
+      "fallback": "Compatibility event",
+      "ids": {
+        "17": "Compatibility resolver"
+      }
+    },
+    {
+      "name": "Terminal Services",
+      "contains": "terminalservices",
+      "fallback": "RDP event",
+      "ids": {
+        "21": "RDP logon",
+        "22": "RDP shell start",
+        "24": "RDP disconnect",
+        "25": "RDP reconnect",
+        "1149": "RDP auth succeeded"
+      }
+    },
+    {
+      "name": "BITS",
+      "contains": "bits-client",
+      "fallback": "BITS event",
+      "ids": {
+        "3": "BITS job created",
+        "59": "BITS transfer started",
+        "60": "BITS transfer stopped"
+      }
+    },
+    {
+      "name": "Security",
+      "exact": "security",
+      "fallback": "Security event",
+      "ids": {
+        "1102": "Audit log cleared",
+        "4624": "Logon",
+        "4625": "Failed logon",
+        "4634": "Logoff",
+        "4647": "User-initiated logoff",
+        "4648": "Explicit-credential logon",
+        "4656": "Handle to object requested",
+        "4657": "Registry value modified",
+        "4663": "Object access attempt",
+        "4670": "Permissions changed",
+        "4672": "Special privileges",
+        "4688": "Process create",
+        "4689": "Process exited",
+        "4697": "Service installed",
+        "4698": "Scheduled task created",
+        "4699": "Scheduled task deleted",
+        "4702": "Scheduled task updated",
+        "4719": "Audit policy changed",
+        "4720": "User created",
+        "4722": "User enabled",
+        "4724": "Password reset attempt",
+        "4725": "User disabled",
+        "4726": "User deleted",
+        "4728": "Added to global group",
+        "4732": "Added to local group",
+        "4738": "User changed",
+        "4740": "User locked out",
+        "4756": "Added to universal group",
+        "4768": "Kerberos TGT requested",
+        "4769": "Kerberos service ticket requested",
+        "4771": "Kerberos pre-auth failed",
+        "4776": "NTLM credential validation",
+        "4778": "Session reconnected",
+        "4779": "Session disconnected",
+        "4798": "User's groups enumerated",
+        "4799": "Local group enumerated",
+        "5140": "Network share accessed",
+        "5145": "Share object access check",
+        "5156": "WFP connection allowed",
+        "5157": "WFP connection blocked",
+        "5158": "WFP bind allowed"
+      }
+    },
+    {
+      "name": "System",
+      "exact": "system",
+      "fallback": "System event",
+      "ids": {
+        "7045": "Service installed",
+        "7036": "Service state changed",
+        "7040": "Service start type changed",
+        "104": "Log cleared",
+        "6005": "Event log started",
+        "6006": "Event log stopped"
+      }
+    }
+  ],
+  "ioc_types": {
+    "Computer": "host",
+    "User": "user",
+    "TargetUserName": "user",
+    "SubjectUserName": "user",
+    "Image": "process",
+    "ParentImage": "process",
+    "SourceImage": "process",
+    "TargetImage": "process",
+    "CommandLine": "command",
+    "ParentCommandLine": "command",
+    "TargetFilename": "file",
+    "ImageLoaded": "file",
+    "CurrentDirectory": "file",
+    "Hashes": "hash",
+    "TargetObject": "registry",
+    "ExePath": "file",
+    "DestinationIp": "ip",
+    "SourceIp": "ip",
+    "DestinationHostname": "domain",
+    "QueryName": "domain",
+    "ServiceName": "other",
+    "ImagePath": "file",
+    "TaskName": "other",
+    "ScriptBlockText": "command",
+    "IpAddress": "ip",
+    "WorkstationName": "host"
+  },
+  "columns": {
+    "user": [
+      "User",
+      "TargetUserName",
+      "SubjectUserName"
+    ],
+    "image": [
+      "Image",
+      "SourceImage",
+      "NewProcessName",
+      "ProcessName"
+    ],
+    "cmd": [
+      "CommandLine",
+      "ScriptBlockText"
+    ],
+    "target": [
+      "TargetFilename",
+      "TargetObject",
+      "TargetImage",
+      "ImageLoaded",
+      "ExePath",
+      "QueryName",
+      "DestinationHostname",
+      "DestinationIp",
+      "PipeName",
+      "ServiceName",
+      "ImagePath",
+      "TaskName"
+    ],
+    "guid": [
+      "ProcessGuid",
+      "SourceProcessGuid",
+      "SourceProcessGUID"
+    ],
+    "pguid": [
+      "ParentProcessGuid"
+    ],
+    "pimage": [
+      "ParentImage"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+# macOS / Python
+.DS_Store
+__pycache__/
+.venv/
+
+# Large raw logs (the converted .jsonl next to them is committed)
+*.evtx
+content/cases/*/data/source/
+
+# Per-player progress
+content/cases/*/state.json
+content/archive/*/state.json
+
+# Tutorial practice workspace (recreated from content/tutorial/practice on every start)
+content/tutorial/workspace/

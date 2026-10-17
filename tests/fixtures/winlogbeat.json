@@ -1,0 +1,41 @@
+[
+ {
+  "@timestamp": "2024-03-02T10:20:01.500Z",
+  "message": "Process Create",
+  "winlog": {
+   "channel": "Microsoft-Windows-Sysmon/Operational",
+   "event_id": 1,
+   "record_id": 120,
+   "computer_name": "FS01.corp.local",
+   "provider_name": "Microsoft-Windows-Sysmon",
+   "process": {
+    "pid": 2000,
+    "thread": {
+     "id": 3000
+    }
+   },
+   "event_data": {
+    "UtcTime": "2024-03-02 10:20:01.499",
+    "ProcessGuid": "{aaaa-1}",
+    "ParentProcessGuid": "{aaaa-0}",
+    "Image": "C:\\Windows\\System32\\sc.exe",
+    "CommandLine": "sc.exe query UpdaterSvc",
+    "User": "CORP\\admin",
+    "ParentImage": "C:\\Windows\\System32\\cmd.exe"
+   }
+  }
+ },
+ {
+  "@timestamp": "2024-03-02T10:21:00Z",
+  "winlog": {
+   "channel": "Microsoft-Windows-PowerShell/Operational",
+   "event_id": 4104,
+   "record_id": 9,
+   "computer_name": "FS01.corp.local",
+   "event_data": {
+    "ScriptBlockText": "Get-Service UpdaterSvc",
+    "ScriptBlockId": "x"
+   }
+  }
+ }
+]

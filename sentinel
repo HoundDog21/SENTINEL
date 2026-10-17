@@ -1,0 +1,15 @@
+#!/bin/zsh
+# Start the SENTINEL lab GUI and open it in the browser.
+#   ./sentinel              start the app
+#   ./sentinel case …       build, check and publish cases (see tools/case.py)
+#   ./sentinel test         run the test suite (see tests/README.md)
+cd "${0:A:h}" || exit 1
+if [[ "$1" == "test" ]]; then
+  shift
+  exec python3.12 tests/run.py "$@"
+fi
+if [[ "$1" == "case" ]]; then
+  shift
+  exec python3.12 tools/case.py "$@"
+fi
+exec python3.12 app/server.py "$@"

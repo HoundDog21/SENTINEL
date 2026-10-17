@@ -1,0 +1,12 @@
+{
+  "from": "Priya Nandakumar, SOC Team Lead",
+  "common": "**From:** Priya Nandakumar  \n**To:** Cody  \n**Subject:** RE: Training box\n\nThat's the console. You've added evidence, built a tree, flagged an indicator and scored yourself, which is the whole loop.\n\nThis score doesn't count. Your XP and rank haven't moved.",
+  "by_grade": {
+    "S": "Clean work on a clean box. Bring the same care to the real ones.",
+    "A": "Solid. Check the rubric items you missed before your first real case.",
+    "B": "Good enough to start. Re-read the answer key's tree and timeline.",
+    "C": "Run the tutorial again before your first shift. It's quick.",
+    "D": "Don't worry, it's practice. Run it again from HQ whenever you like."
+  },
+  "next": "When you're ready, Chapter 1 is waiting in the Campaign list."
+}

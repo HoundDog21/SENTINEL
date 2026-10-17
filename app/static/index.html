@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SENTINEL</title>
+  <link rel="stylesheet" href="/static/vendor/gridstack.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/marked.min.js"></script>
+  <script src="/static/vendor/gridstack-all.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" id="go-home" title="All cases"><span class="brand-mark"></span>SENTINEL</button>
+    <span class="crumb" id="crumb"></span>
+    <span class="spacer"></span>
+    <span class="status" id="status"></span>
+    <div class="case-tools hidden" id="case-tools">
+      <label class="ctl" title="Layout preset">
+        <span class="ctl-label">Layout</span>
+        <select id="layout-select">
+          <option value="custom">My layout</option>
+          <option value="triage">Triage</option>
+          <option value="investigate">Investigate</option>
+          <option value="report">Report</option>
+        </select>
+      </label>
+      <div class="pop-wrap">
+        <button class="btn" id="widgets-btn" title="Show or hide widgets">Widgets ▾</button>
+        <div class="popover hidden" id="widgets-pop"></div>
+      </div>
+      <button class="btn" id="lock-btn" title="Lock layout so widgets can't be moved">Unlocked</button>
+    </div>
+    <div class="pop-wrap">
+      <button class="btn icon" id="settings-btn" title="Appearance">⚙</button>
+      <div class="popover right hidden" id="settings-pop"></div>
+    </div>
+  </header>
+
+  <!-- Home: analyst HQ (rendered by app.js) -->
+  <main id="home" class="home"></main>
+
+  <!-- Case console -->
+  <main id="console" class="console hidden">
+    <section class="casebar" id="casebar"></section>
+    <div class="grid-scroll"><div class="grid-stack" id="grid"></div></div>
+  </main>
+
+  <dialog id="dialog">
+    <form method="dialog">
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-body"></div>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn" id="dialog-cancel">Cancel</button>
+        <button value="ok" class="btn primary" id="dialog-ok">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/tutorial.js"></script>
+</body>
+</html>
