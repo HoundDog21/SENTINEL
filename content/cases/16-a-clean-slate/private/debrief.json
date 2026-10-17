@@ -1,0 +1,12 @@
+{
+  "from": "Dee, Senior Analyst",
+  "common": "**From:** Dee  \n**To:** Cody  \n**Subject:** RE: Three Bees: log cleared on a server\n\nCody,\n\nCallum read your report twice and then rang Jamie, who confirmed the log clear. He really was doing maintenance, from his own workstation, and the 4624 for `0x3a17a` came from his desk PC, not 172.16.66.1. So two findings, two actors, exactly as you kept them. If you'd glued them together, Jamie would have had a very bad evening for nothing.\n\n172.16.66.1 turned out to be the guest Wi-Fi gateway. Someone had found that guest traffic could reach the domain controllers. They sprayed one password, `Summer2020!`, and `normal` was a warehouse scanner account that had been set to that password by a contractor. Within two minutes of the spray, `normal` had requested service tickets for the file server. The SIEM had those events. Nobody had looked.\n\nAnd `backdoor`? A support account a former MSP created in 2017 \"in case we get locked out\". Domain Admin. Nobody remembered it. It's disabled now, and Callum is going through every account with a name he doesn't recognise.\n\nThe guest network is now properly isolated. That's three fixes from one twelve-event export.",
+  "by_grade": {
+    "S": "Superb. You decoded every status code, you named the spray and the compromised account, and, hardest of all, you didn't let nine seconds of coincidence make the log clear part of the attack. That restraint is what separates analysts from storytellers.",
+    "A": "Strong report. Spray and compromised account nailed. Check the reference for what got away. Often it's the second TGT's odd address, or keeping the log clear honestly separate.",
+    "B": "You found the spray, but the details were thin. Go back to your table and make sure every row has a status code meaning next to it. Then reread the log clear and ask what it *could not* have hidden.",
+    "C": "The report focused on the log clear, which is what the alert pointed at, and missed most of what the Kerberos events say. That's the lesson: an alert is where you start, not where you stop. Reset it and build the table first.",
+    "D": "Reset this and start with the table from step 3, every field for every event. Look up each status code before you form any theory. The pattern only appears once all eleven rows are side by side."
+  },
+  "next": ""
+}

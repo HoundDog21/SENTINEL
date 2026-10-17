@@ -1,0 +1,16 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 10, "text": "Process tree is correct: WmiPrvSE.exe (no process-create event) → three cmd.exe (recs 9826, 9827, 9828) → whoami.exe under the third (rec 9829)" },
+    { "points": 15, "text": "Identified remote process creation through WMI: WmiPrvSE.exe -secured -Embedding starting shells on behalf of a caller" },
+    { "points": 15, "text": "Explained the output redirection to \\\\127.0.0.1\\ADMIN$\\__1556656369.7 (C:\\Windows) as a way for a remote caller to collect output over SMB, and tied the loopback connection (recs 9830/9831) to it" },
+    { "points": 10, "text": "Read the inbound SMB connection (rec 9825) correctly using Initiated: the remote party is 10.0.2.19, connecting to IEWIN7 on 445" },
+    { "points": 10, "text": "Separated the tool's housekeeping (cd \\, cd) from the operator's first real command (whoami /all)" },
+    { "points": 10, "text": "Decoded 1556656369 as Unix time 2019-04-30 20:32:49 UTC and matched it to the inbound connection" },
+    { "points": 10, "text": "Concluded from session 0, High integrity and a network logon that nobody was at the desktop and that IEUser's admin credentials are in someone else's hands" },
+    { "points": 5,  "text": "Noticed the loopback connection's timestamp is earlier than the processes it serves and didn't build the timeline on it" },
+    { "points": 5,  "text": "Tested the inventory-tool theory against what the events actually do (start shells, write to C:\\Windows, whoami /all) and rejected it with reasons" },
+    { "points": 10, "text": "Listed unknowns and recommended isolating both hosts, resetting IEUser (and shared local admin passwords), and hunting for the same pattern and source IP" }
+  ]
+}

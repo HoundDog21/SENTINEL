@@ -1,0 +1,12 @@
+{
+  "from": "Dee, Senior Analyst",
+  "common": "**From:** Dee  \n**To:** Cody  \n**Subject:** RE: Kestrel Print: \"it can't install anything\"\n\nCody,\n\nMalcolm unplugged the workstation and drove the `.7z` over to us on a USB stick, which is the most Malcolm thing possible. Inside was a single program: a remote-access tool, configured to run from the user's own AppData folder with no installer and no admin needed. Nobody had extracted it yet.\n\nThe user, a junior designer, had been chatting with someone on a freelance-work platform who \"needed help testing a font installer\". They sent the command over chat and talked him through pasting it. He thought it was a font. The conversation stopped as soon as Malcolm pulled the cable, which tells you someone was watching.\n\nThe workstation didn't need a wipe in the end. Malcolm removed the archive, we confirmed nothing else had been dropped, and the artwork survived. Your report is why it went that way: you told him exactly what to collect before anyone started deleting things.\n\nHe's now asking whether he can block that utility. He can. Send him the hunt query.",
+  "by_grade": {
+    "S": "Excellent. You didn't stop at \"svchost wrote a file\". You worked out *why*, kept downloaded and executed apart, and gave Malcolm an answer that respected his lockdown while explaining why it wasn't enough. That's client handling, not just analysis.",
+    "A": "Strong work. Verdict and chain were right. Check the reference: what most people miss here is the missing records, or treating the file's contents as proven when there's no hash.",
+    "B": "Good start, but you left some reasoning out. The file event is the heart of this case. Go back and explain to yourself, in writing, why a service host wrote the file and what that means for linking it to the command.",
+    "C": "You recognised the download, but the report either overclaimed (that the archive ran, or what's in it) or accepted the admin-rights argument without testing it. Reset and work step 7 slowly.",
+    "D": "This one got away. Reset it and start by researching the utility on LOLBAS before reading a single field. Once you know what it's meant to do, the rest of the export makes sense."
+  },
+  "next": ""
+}

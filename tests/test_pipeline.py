@@ -9,7 +9,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from helpers import R_CAMPAIGN, R_CASES, ROOT, SKIP, casetool, server
+from helpers import R_CAMPAIGN, R_CASES, R_LIBRARY, ROOT, SKIP, casetool, server
 
 FX = Path(__file__).parent / "fixtures"
 
@@ -147,8 +147,13 @@ class CaseTool(unittest.TestCase):
         self.assertEqual(code, 0, out)
         d = self.root / R_CASES / "07-cli-test"
         for rel in casetool.AUTHORED + ["worksheet.md", "report.md", "private/author-notes.md", "private/case.json",
-                                        "data/otrf.jsonl", "data/events.jsonl", "data/source/otrf.json", "data/source/events.xml"]:
+                                        "data/case07-sysmon.jsonl", "data/case07-system.jsonl",
+                                        "data/source/case07-sysmon.json", "data/source/case07-system.xml"]:
             self.assertTrue((d / rel).is_file(), rel)
+        public = "".join(p.name for p in (d / "data").rglob("*")) + (d / "brief.md").read_text()
+        self.assertNotIn("otrf", public, "original file names (which can give the technique away) stay private")
+        meta = json.loads((d / "private" / "case.json").read_text())
+        self.assertEqual(sorted(s["from"] for s in meta["sources"]), ["events.xml", "otrf.json"], "the original name is kept privately")
         self.assertTrue((d / "brief.md").read_text().startswith("# Case 07: CLI Test"))
         notes = (d / "private" / "author-notes.md").read_text()
         self.assertIn("# Author notes: 07-cli-test", notes)
@@ -176,6 +181,25 @@ class CaseTool(unittest.TestCase):
         self.assertIn("07-cli-test", out)
         self.assertIn("live", out)
 
+    def test_publish_to_library(self):
+        self.assertEqual(self.run_cli("new", "21-lib-test", "--title", "Lib Test", "--data", FX / "otrf.json")[0], 0)
+        self.fill_todos("21-lib-test")
+        code, out = self.run_cli("publish", "21-lib-test")
+        self.assertIn("--chapter N or --library", out)
+        code, out = self.run_cli("publish", "21-lib-test", "--library")
+        self.assertIn("needs --teaser", out)
+        code, out = self.run_cli("publish", "21-lib-test", "--library", "--teaser", "Someone ran reg.exe on a workstation.")
+        self.assertIn("gives the case away", out)
+        code, out = self.run_cli("publish", "21-lib-test", "--library", "--teaser", "A workstation changed a logon setting nobody asked for.")
+        self.assertEqual(code, 0, out)
+        before = json.loads((ROOT / R_LIBRARY).read_text())["cases"]   # the real library, copied into the sandbox
+        lib = json.loads((self.root / R_LIBRARY).read_text())
+        self.assertEqual(lib["cases"], before + [{"case": "21-lib-test", "teaser": "A workstation changed a logon setting nobody asked for."}])
+        code, out = self.run_cli("publish", "21-lib-test", "--chapter", "2")
+        self.assertIn("can't also be a chapter", out)
+        code, out = self.run_cli("list")
+        self.assertRegex(out, r"21-lib-test\s+library\s+live")
+
     def test_failed_new_leaves_nothing_behind(self):
         before = sorted(p.name for p in (self.root / R_CASES).iterdir())
         code, out = self.run_cli("new", "08-bad", "--title", "Bad", "--data", FX / "otrf.json", FX / "unknown.json")
@@ -194,11 +218,26 @@ class CaseTool(unittest.TestCase):
         code, out = self.run_cli("add-data", "07-cli-test", FX / "otrf.json")
         self.assertEqual(code, 0, out)
         d = self.root / R_CASES / "07-cli-test"
-        self.assertTrue((d / "data" / "otrf-2.jsonl").is_file(), "a second file with the same name gets a new stem")
+        self.assertTrue((d / "data" / "case07-sysmon-2.jsonl").is_file(), "a second file with the same name gets a new stem")
         meta = json.loads((d / "private" / "case.json").read_text())
         self.assertEqual(len(meta["sources"]), 2)
         self.assertEqual(self.run_cli("survey", "07-cli-test")[0], 0)
-        self.assertIn("otrf-2.jsonl", (d / "private" / "author-notes.md").read_text())
+        self.assertIn("case07-sysmon-2.jsonl", (d / "private" / "author-notes.md").read_text())
+        code, out = self.run_cli("add-data", "07-cli-test", FX / "otrf.json", "--keep-names")
+        self.assertTrue((d / "data" / "otrf.jsonl").is_file(), "--keep-names keeps the input name")
+
+    def test_survey_lists_every_user(self):
+        """The author notes name every account: an odd one (say, 'backdoor') is often the finding."""
+        src = self.tmp / "many-users.jsonl"
+        src.write_text("\n".join(json.dumps({"Event": {
+            "System": {"EventID": 4768, "Channel": "Security", "Computer": "DC1", "EventRecordID": 100 + i,
+                       "TimeCreated_attributes": {"SystemTime": f"2020-01-01T00:00:{i:02d}.000000Z"}},
+            "EventData": {"TargetUserName": f"user{i:02d}"}}}) for i in range(12)) + "\n")
+        code, out = self.run_cli("new", "07-cli-test", "--title", "T", "--data", src)
+        self.assertEqual(code, 0, out)
+        notes = (self.root / R_CASES / "07-cli-test" / "private" / "author-notes.md").read_text()
+        for i in range(12):
+            self.assertIn(f"`user{i:02d}`", notes)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,12 @@
+{
+  "from": "Priya Nandakumar, SOC Team Lead",
+  "common": "**From:** Priya Nandakumar  \n**To:** Cody  \n**Subject:** RE: Marrowfield Dental: alert on the intranet server\n\nCody,\n\nOwen called back at 09:15. He took your report to his network contractor, and they pulled the IIS logs for the minute you named.\n\nThe request at 01:33:53 went to a file called `help.aspx` in the portal's uploads folder. Nobody at Marrowfield had heard of it. It had arrived two days earlier through the portal's \"attach a document\" form on the HR page, which never checked what kind of file it was saving. And the \"internal only\" portal? A port-forward left over from a contractor's remote-support visit in 2017. It had been reachable from the internet ever since.\n\nThe maintenance job is real, by the way. It runs at 03:00, from Task Scheduler, and it backs up a database. It never touches IIS.\n\nWhat I want you to take from this one: you couldn't see `help.aspx`, the upload form or the port-forward, and you didn't pretend to. You told Owen *which minute of which log* to read, and the answers were all sitting there.",
+  "by_grade": {
+    "S": "Excellent. You read the process-access event for what it was, didn't let the UNKNOWN frames scare you into an injection story, and kept web shell and command injection as two live options until the evidence picked one. That last part is rarer than you'd think.",
+    "A": "Strong report. The core chain and verdict were right and well evidenced. Check the reference write-up for the detail you missed. It's usually the process-access event or the CallTrace, and those are worth getting comfortable with.",
+    "B": "Good instincts, but some points slipped. Go back to rec 1045 and line it up against rec 1044 field by field. Half of reading Sysmon well is knowing which events are side effects of other events.",
+    "C": "You saw that something was wrong, but too much of the report was guesswork about how the attacker got in. The logs didn't show a web shell, so the report can't name one. Reset the case and write only what each record proves.",
+    "D": "This one got away from you. Reset it and start from the parent process: read every field of the w3wp.exe command line and look up each switch before you open a hint. The rest of the case follows from knowing what that process is."
+  },
+  "next": ""
+}

@@ -7,9 +7,17 @@ __pycache__/
 *.evtx
 content/cases/*/data/source/
 
-# Per-player progress
+# Per-player progress (the app writes these while you play a case)
 content/cases/*/state.json
+content/cases/*/activity.json
+content/cases/*/bookmarks.json
+content/cases/*/iocs.json
+content/cases/*/tree.json
 content/archive/*/state.json
+content/archive/*/activity.json
+content/archive/*/bookmarks.json
+content/archive/*/iocs.json
+content/archive/*/tree.json
 
 # Tutorial practice workspace (recreated from content/tutorial/practice on every start)
 content/tutorial/workspace/

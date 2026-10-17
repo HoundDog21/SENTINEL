@@ -418,3 +418,27 @@ dialog { max-height: 86vh; overflow: auto; }
 .btn.ghost { background: none; border-color: transparent; color: var(--muted); }
 .btn.ghost:hover { color: var(--text); }
 .btn:disabled { opacity: .4; cursor: default; }
+
+/* ---------- case library ---------- */
+.lib-h { display: flex; align-items: baseline; gap: 10px; }
+.lib-h .muted { text-transform: none; letter-spacing: 0; }
+.lib-intro { margin: -4px 0 12px; }
+.lib-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.lib-filters input[type=search] { flex: 1; min-width: 220px; padding: 6px 10px; }
+.lib-filters .seg { margin-bottom: 0; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-bottom: 30px; }
+.lib-card { display: flex; flex-direction: column; gap: 6px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; cursor: pointer; color: var(--text); font: inherit; min-height: 150px; }
+.lib-card:hover { border-color: var(--accent); }
+.lib-card.completed { border-left: 3px solid var(--good); }
+.lib-card.in-progress { border-left: 3px solid var(--accent); }
+.lib-top { display: flex; align-items: center; gap: 8px; }
+.lib-title { font-weight: 700; font-size: 15px; }
+.lib-teaser { color: var(--muted); font-size: 13px; line-height: 1.45; flex: 1; }
+.lib-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 7px; }
+.lib-data { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.lib-level { font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; }
+.lv-beginner { color: var(--good); }
+.lv-intermediate { color: var(--sev-medium); }
+.lv-advanced { color: var(--sev-high); }
+.pill.lib-new { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.pill.lib-wip { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }

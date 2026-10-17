@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import traceback
 import webbrowser
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,6 +23,7 @@ ROOT = APP.parent
 CONTENT = ROOT / "content"
 CASES = CONTENT / "cases"
 CAMPAIGN = CONTENT / "campaign.json"
+LIBRARY = CONTENT / "library.json"      # standalone cases you can pick in any order
 TEMPLATES = CONTENT / "templates"
 # Tutorial: a read-only practice template, copied into a throwaway workspace.
 # It is never a campaign chapter, so it can't change XP, rank or real cases.
@@ -252,6 +254,36 @@ def campaign():
     return read_json(CAMPAIGN, {"company": "", "analyst": "Analyst", "ranks": [{"xp": 0, "title": "Analyst"}], "chapters": []})
 
 
+def library():
+    """Library entries whose case folder exists and that aren't also campaign chapters (each case once)."""
+    chapters = {c.get("case") for c in campaign().get("chapters", [])}
+    out, seen = [], set()
+    for entry in read_json(LIBRARY, {"cases": []}).get("cases", []):
+        cid = entry.get("case") if isinstance(entry, dict) else None
+        d = case_dir(cid) if isinstance(cid, str) else None
+        if d and cid not in chapters and cid not in seen:   # a duplicate entry would count its XP twice
+            seen.add(cid)
+            out.append((entry, d))
+    return out
+
+
+def library_listing():
+    """What the Case library shows: title and description, never anything from private/."""
+    items = []
+    for entry, d in library():
+        brief = read_text(d / "brief.md")
+        st = state_of(d)
+        status = "completed" if st["submitted"] else ("in-progress" if st["opened_at"] else "new")
+        items.append({
+            "case": d.name, "title": re.sub(r"^Case\s+\d+:\s*", "", title_of(brief, d.name)),
+            "teaser": entry.get("teaser", ""), "difficulty": field_of(brief, "Difficulty") or "",
+            "severity": field_of(brief, "Severity") or "Medium", "budget": field_of(brief, "Time budget") or "",
+            "data": field_of(brief, "Data") or "", "status": status, "case_status": st["status"],
+            "score": st["score"], "grade": st["grade"],
+        })
+    return items
+
+
 def rank_for(xp, ranks):
     cur = ranks[0]
     nxt = None
@@ -276,10 +308,14 @@ def profile():
         chapters.append({**ch, "status": status, "score": st["score"] if st else None,
                          "grade": st["grade"] if st else None, "case_status": st["status"] if st else None})
         prev_done = done
+    closed = sum(1 for c in chapters if c["status"] == "completed")
+    for _, d in library():                  # library cases earn XP too
+        st = state_of(d)
+        xp += st["score"] or 0
+        closed += bool(st["submitted"])
     cur, nxt = rank_for(xp, camp["ranks"])
     return {"company": camp["company"], "tagline": camp.get("tagline", ""), "analyst": camp["analyst"],
-            "xp": xp, "rank": cur, "next_rank": nxt, "chapters": chapters,
-            "closed": sum(1 for c in chapters if c["status"] == "completed")}
+            "xp": xp, "rank": cur, "next_rank": nxt, "chapters": chapters, "closed": closed}
 
 
 def chapter_of(cid):
@@ -293,6 +329,21 @@ def unlocked(cid):
 
 def grade_for(score, grades):
     return next((g for floor, g in grades if score >= floor), grades[-1][1])
+
+
+def indices(value, limit):
+    """A client-sent list of item numbers, kept only if each is a real index below limit (no bools,
+    no duplicates), so a hint or rubric item can't be counted twice or out of range."""
+    if not isinstance(value, list):
+        return None
+    return sorted({i for i in value if type(i) is int and 0 <= i < limit})
+
+
+def json_object(body):
+    data = json.loads(body or "{}")
+    if not isinstance(data, dict):
+        raise ValueError("expected a JSON object")
+    return data
 
 
 def debrief_text(d, grade):
@@ -336,6 +387,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def body(self):
         n = int(self.headers.get("Content-Length") or 0)
+        if n < 0:
+            raise ValueError("bad Content-Length")       # read(-1) would block until the client hangs up
         if n > MAX_BODY:
             raise ValueError("request too large")
         return self.rfile.read(n).decode("utf-8")
@@ -345,16 +398,39 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         return origin in (None, f"http://{HOST}:{PORT}", f"http://localhost:{PORT}")
 
+    def local_host(self):
+        # A website that re-points its own domain at 127.0.0.1 (DNS rebinding) could otherwise read the API.
+        host = self.headers.get("Host")
+        return host in (None, f"{HOST}:{PORT}", f"localhost:{PORT}")
+
     def route(self):
         return [unquote(p) for p in urlparse(self.path).path.strip("/").split("/") if p]
 
+    def guarded(self, fn, *args):
+        """Run a handler; an unexpected error becomes a JSON 500 (with the traceback in the terminal),
+        not a dropped connection the browser can't explain."""
+        try:
+            return fn(*args)
+        except (BrokenPipeError, ConnectionResetError):
+            return                                        # the browser went away mid-reply: nobody to tell
+        except Exception:
+            traceback.print_exc()
+            return self.error(500, "internal error: see the terminal running SENTINEL")
+
     # -- GET --
     def do_GET(self):
+        self.guarded(self.get)
+
+    def get(self):
+        if not self.local_host():
+            return self.error(403, "unexpected Host header")
         p = self.route()
         if not p or p[0] != "api":
             return self.static(p)
         if p == ["api", "catalog"]:
             return self.send(200, catalog())
+        if p == ["api", "library"]:
+            return self.send(200, library_listing())
         if p == ["api", "profile"]:
             return self.send(200, profile())
         if p == ["api", "cases"]:
@@ -420,12 +496,14 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- PUT / POST --
     def do_PUT(self):
-        self.write("PUT")
+        self.guarded(self.write, "PUT")
 
     def do_POST(self):
-        self.write("POST")
+        self.guarded(self.write, "POST")
 
     def write(self, method):
+        if not self.local_host():
+            return self.error(403, "unexpected Host header")
         if not self.same_origin():
             return self.error(403, "cross-origin write refused")
         p = self.route()
@@ -459,12 +537,14 @@ class Handler(BaseHTTPRequestHandler):
             write_json(d / f"{p[1]}.json", data)
             return self.send(200, {"ok": True})
         if method == "PUT" and sub == "state":
-            incoming = json.loads(body or "{}")
+            incoming = json_object(body)
             st = state_of(d)
             # 'submitted' can only be set through /submit, never via state updates.
-            for k in ("steps", "hints"):
-                if isinstance(incoming.get(k), list):
-                    st[k] = incoming[k]
+            limits = {"steps": len(steps_of(read_text(d / "brief.md"))), "hints": read_text(d / "hints.md").count("<details")}
+            for k, limit in limits.items():
+                ok = indices(incoming.get(k), limit)
+                if ok is not None:
+                    st[k] = ok
             if incoming.get("story_seen") is True:
                 st["story_seen"] = True
             if incoming.get("status") in STATUSES and incoming["status"] != st["status"]:
@@ -473,7 +553,7 @@ class Handler(BaseHTTPRequestHandler):
             write_json(d / "state.json", st)
             return self.send(200, {"state": st, "activity": read_json(d / "activity.json", [])})
         if method == "POST" and sub == "activity":
-            incoming = json.loads(body or "{}")
+            incoming = json_object(body)
             kind, text = incoming.get("type"), str(incoming.get("text") or "").strip()[:4000]
             if kind not in ACTIVITY_TYPES or not text:
                 return self.error(400, "bad activity entry")
@@ -492,8 +572,8 @@ class Handler(BaseHTTPRequestHandler):
             rb = read_json(d / "private" / "rubric.json", None)
             if not rb:
                 return self.error(404, "this case has no rubric")
-            incoming = json.loads(body or "{}")
-            checked = sorted({i for i in incoming.get("rubric", []) if isinstance(i, int) and 0 <= i < len(rb["items"])})
+            incoming = json_object(body)
+            checked = indices(incoming.get("rubric", []), len(rb["items"])) or []
             before = profile()
             earned = sum(rb["items"][i]["points"] for i in checked)
             penalty = len(st["hints"]) * rb.get("hint_penalty", 0)

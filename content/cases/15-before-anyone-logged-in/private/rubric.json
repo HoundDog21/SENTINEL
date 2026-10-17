@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 10, "text": "Process tree is correct: Utilman.exe /debug (no process-create event) → osk.exe (rec 18917) → whoami.exe (rec 18918), with LogonUI.exe's registry event (rec 18916) kept out of the chain" },
+    { "points": 20, "text": "Spotted that osk.exe's Description is 'Windows Command Processor' and concluded the On-Screen Keyboard file had been replaced with cmd.exe (accessibility-features backdoor)" },
+    { "points": 10, "text": "Explained Utilman.exe /debug as the Ease of Access manager started from the logon screen, so Utilman → osk is normal by itself and the abnormal part is what osk.exe really is" },
+    { "points": 15, "text": "Explained SYSTEM (LogonId 0x3e7, System integrity) in session 2 as a shell on the logon screen with no authentication, so 'nobody was logged on' is consistent with the attack rather than evidence of a false positive" },
+    { "points": 10, "text": "Treated the RuleName tags (e.g. T1076 Remote Desktop Protocol) as config labels rather than evidence, and said the LogonUI event suggests a logon screen or RDP session without proving it" },
+    { "points": 10, "text": "Distinguished replaced file from IFEO Debugger using Image and Description, and said the backdoor was planted earlier, outside the export, by someone who already had admin rights" },
+    { "points": 5,  "text": "Recognised the host as a domain controller and explained why SYSTEM there means likely domain compromise" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. when and how osk.exe was replaced, the RDP source, what was typed after whoami, other backdoored hosts)" },
+    { "points": 10, "text": "Classified it as a true positive (Critical), escalated it as an active domain compromise, and recommended preserving the binaries, finding the RDP source, checking other DCs, and requiring NLA" }
+  ]
+}

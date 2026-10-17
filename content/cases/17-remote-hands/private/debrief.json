@@ -1,0 +1,12 @@
+{
+  "from": "Priya Nandakumar, SOC Team Lead",
+  "common": "**From:** Priya Nandakumar  \n**To:** Cody  \n**Subject:** RE: Ostrander & Lowe: WMI on a paralegal's PC\n\nCody,\n\nGraham came in on his day off after reading your report. 10.0.2.19 isn't the inventory server. It's a meeting-room PC that's left logged in for video calls. Someone had been using it as a jumping-off point for three days.\n\nThe IEUser account is the firm's \"local admin\" account, with the same password on every workstation since the office opened. Graham's predecessor had written it on a sticky note under the meeting-room keyboard. The attacker didn't need to crack anything.\n\nThe Security log showed the same pattern against eleven other workstations over those three days, always `whoami /all` first. On two of them it went further. Your report gave Graham the exact command-line pattern to search for, and he found all eleven in an afternoon.\n\nThey're rolling out unique local admin passwords this week. Graham also asked me to pass on that the inventory tool does use WMI, but it's never started a command shell in its life. You were right to test it rather than dismiss it.",
+  "by_grade": {
+    "S": "Excellent. Inbound direction read correctly, housekeeping separated from the operator, the epoch decoded, and the client's theory tested fairly. That's a lateral-movement write-up I'd hand straight to an IR team.",
+    "A": "Strong work. The core of it is right. Check the reference for the finer points. Most people miss either the file-name timestamp or the direction of rec 9825.",
+    "B": "Decent, but the network side let you down. Reread recs 9825, 9830 and 9831 with Initiated in mind, and work out which machine is which. Then explain to yourself why the output goes to ADMIN$.",
+    "C": "You saw WMI and cmd, but the report didn't explain how the attacker got output back or whose credentials were used, and those are the two things the client needs most. Reset and work steps 3 and 7 slowly.",
+    "D": "Reset this and start with WmiPrvSE.exe: look up what it is and why it would ever start cmd.exe. Then take one command line apart symbol by symbol. The rest follows."
+  },
+  "next": ""
+}

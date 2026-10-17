@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case11-sysmon.jsonl",
+      "original": "data/case11-sysmon.evtx",
+      "from": "LM_typical_IIS_webshell_sysmon_1_10_traces.evtx",
+      "via": null,
+      "sha256": "6f1cb3c435389d961261ccfbb2c4562b156d4160319fe4736ce1506a43327c7b",
+      "format": "EVTX (chainsaw dump)",
+      "events": 4,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

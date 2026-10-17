@@ -2,9 +2,10 @@
 import json
 import re
 import shutil
+import socket
 import unittest
 
-from helpers import R_CAMPAIGN, R_CASES, R_TUTORIAL, R_WORKSPACE, ROOT, Sandbox, fingerprint, server
+from helpers import R_CAMPAIGN, R_CASES, R_LIBRARY, R_TUTORIAL, R_WORKSPACE, ROOT, Sandbox, fingerprint, server
 
 IOC_TYPES = set(re.search(r'const IOC_TYPES = \[([^\]]+)\]', (ROOT / "app/static/app.js").read_text()).group(1).replace('"', "").replace(" ", "").split(","))
 
@@ -87,6 +88,40 @@ class Safety(unittest.TestCase):
         code, st = self.sb.put(self.api + "/state", {"status": "Pwned"})
         self.assertEqual(st["state"]["status"], "Triage")
 
+    def test_malformed_requests_get_a_clear_error(self):
+        """Wrong JSON shapes and a bad Content-Length get a 400, not a dropped connection or a stuck thread."""
+        for method, path, body in (("PUT", "/state", "[]"), ("PUT", "/state", '"x"'), ("POST", "/activity", "[1]")):
+            self.assertEqual(self.sb.call(method, self.api + path, body)[0], 400, f"{method} {path} {body}")
+        self.sb.post(self.api + "/submit")
+        self.assertEqual(self.sb.post(self.api + "/score", '"x"')[0], 400)
+        with socket.create_connection(("127.0.0.1", self.sb.port), timeout=5) as s:
+            s.sendall(f"PUT {self.api}/file/worksheet.md HTTP/1.1\r\nHost: 127.0.0.1:{self.sb.port}\r\nContent-Length: -1\r\n\r\n".encode())
+            self.assertIn(b" 400 ", s.recv(100))
+
+    def test_foreign_host_header_refused(self):
+        """DNS rebinding: a website whose domain resolves to 127.0.0.1 can't read or write the API."""
+        bad = {"Host": f"evil.example:{self.sb.port}"}
+        self.assertEqual(self.sb.call("GET", "/api/profile", headers=bad)[0], 403)
+        self.assertEqual(self.sb.call("GET", self.api, headers=bad)[0], 403)
+        self.assertEqual(self.sb.call("PUT", self.api + "/file/report.md", "x", headers=bad)[0], 403)
+        self.assertEqual(self.sb.call("GET", "/api/profile", headers={"Host": f"localhost:{self.sb.port}"})[0], 200)
+
+    def test_progress_lists_hold_only_real_items(self):
+        """Hints, steps and rubric items can't be counted twice, out of range, or as true/false."""
+        code, st = self.sb.put(self.api + "/state", {"hints": [True, 0, 0, 999], "steps": [0, 0, -1, 999, False]})
+        self.assertEqual((code, st["state"]["hints"], st["state"]["steps"]), (200, [0], [0]))
+        self.sb.post(self.api + "/submit")
+        rb = self.sb.get(self.api + "/rubric")[1]
+        code, sc = self.sb.post(self.api + "/score", {"rubric": [True, 0, 0]})
+        self.assertEqual((code, sc["earned"]), (200, rb["items"][0]["points"]))
+
+    def test_unexpected_errors_answer_with_json(self):
+        (self.sb.root / R_CASES / self.cid / "private" / "rubric.json").write_text(json.dumps({"items": [{"points": 5, "text": "x"}]}))
+        self.sb.post(self.api + "/submit")
+        code, body = self.sb.post(self.api + "/score", {"rubric": [0]})
+        self.assertEqual(code, 500)
+        self.assertIn("error", body)
+
 
 class Campaign(unittest.TestCase):
     """Locking and XP with the real campaign plus an extra test chapter."""
@@ -126,6 +161,55 @@ class Campaign(unittest.TestCase):
         self.assertEqual(sb.get("/api/cases/99-lock-test")[0], 200)
         sb.post(api + "/reset")
         self.assertEqual(sb.get("/api/profile")[1]["xp"], 0, "reset removes the XP")
+
+
+class Library(unittest.TestCase):
+    """The Case library with a test entry: listing, no locks, XP, nothing private leaked."""
+
+    def setUp(self):
+        self.sb = Sandbox(unlock_all=False).__enter__()
+        root = self.sb.root
+        shutil.copytree(root / R_CASES / first_case(), root / R_CASES / "98-library-test")
+        (root / R_LIBRARY).write_text(json.dumps({"cases": [{"case": "98-library-test", "teaser": "A test ticket from the queue, for the test suite."}]}))
+
+    def tearDown(self):
+        self.sb.__exit__(None, None, None)
+
+    def test_listing_unlocked_and_scored(self):
+        sb = self.sb
+        code, lib = sb.get("/api/library")
+        self.assertEqual(code, 200)
+        self.assertEqual([c["case"] for c in lib], ["98-library-test"])
+        c = lib[0]
+        self.assertEqual((c["status"], c["score"], c["teaser"]), ("new", None, "A test ticket from the queue, for the test suite."))
+        for k in ("title", "difficulty", "severity", "budget", "data"):
+            self.assertTrue(c[k], k)
+        self.assertFalse(c["title"].startswith("Case "), "title shown without the 'Case NN:' prefix")
+        answer = (sb.root / R_CASES / "98-library-test" / "private" / "answer-key.md").read_text()
+        self.assertNotIn(answer[200:260], json.dumps(lib), "listing leaked the answer key")
+        api = "/api/cases/98-library-test"
+        self.assertEqual(sb.get(api)[0], 200, "library cases are never locked")
+        self.assertEqual(sb.get("/api/library")[1][0]["status"], "in-progress")
+        sb.post(api + "/submit")
+        sc = sb.post(api + "/score", {"rubric": [0]})[1]
+        pts = sb.get(api + "/rubric")[1]["items"][0]["points"]
+        self.assertEqual(sc["xp_after"] - sc["xp_before"], pts, "library scores earn XP")
+        pf = sb.get("/api/profile")[1]
+        self.assertEqual((pf["xp"], pf["closed"]), (pts, 1))
+        self.assertEqual(sb.get("/api/library")[1][0]["status"], "completed")
+
+    def test_a_duplicate_entry_counts_once(self):
+        entry = {"case": "98-library-test", "teaser": "A test ticket from the queue, for the test suite."}
+        (self.sb.root / R_LIBRARY).write_text(json.dumps({"cases": [entry, entry]}))
+        self.assertEqual(len(self.sb.get("/api/library")[1]), 1)
+        api = "/api/cases/98-library-test"
+        self.sb.post(api + "/submit")
+        sc = self.sb.post(api + "/score", {"rubric": [0]})[1]
+        self.assertEqual(self.sb.get("/api/profile")[1]["xp"], sc["score"], "a duplicate library entry must not double the XP")
+
+    def test_a_chapter_case_is_not_listed(self):
+        (self.sb.root / R_LIBRARY).write_text(json.dumps({"cases": [{"case": first_case(), "teaser": "x" * 30}, {"case": "no-such", "teaser": "y" * 30}]}))
+        self.assertEqual(self.sb.get("/api/library")[1], [])
 
 
 class Tutorial(unittest.TestCase):

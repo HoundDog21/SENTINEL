@@ -25,6 +25,7 @@ CASE_ID = casetool.CASE_ID
 R_CONTENT = server.CONTENT.relative_to(ROOT)
 R_CASES = server.CASES.relative_to(ROOT)
 R_CAMPAIGN = server.CAMPAIGN.relative_to(ROOT)
+R_LIBRARY = server.LIBRARY.relative_to(ROOT)
 R_TEMPLATES = server.TEMPLATES.relative_to(ROOT)
 R_TUTORIAL = server.TUTORIAL_TEMPLATE.relative_to(ROOT)
 R_WORKSPACE = server.TUTORIAL_WORK.relative_to(ROOT)
@@ -53,8 +54,13 @@ def campaign():
     return server.read_json(server.CAMPAIGN, {"chapters": []})
 
 
+def library_entries():
+    return server.read_json(server.LIBRARY, {"cases": []}).get("cases", [])
+
+
 def published_ids():
-    return {c["case"] for c in campaign().get("chapters", []) if c.get("case")}
+    """Cases in the campaign or the Case library (held to the full standard)."""
+    return {c["case"] for c in campaign().get("chapters", []) if c.get("case")} | {e.get("case") for e in library_entries()}
 
 
 def is_draft(d):
@@ -96,6 +102,7 @@ class Sandbox:
             camp = json.loads((self.root / R_CAMPAIGN).read_text())
             camp["chapters"] = []
             (self.root / R_CAMPAIGN).write_text(json.dumps(camp))
+            (self.root / R_LIBRARY).write_text(json.dumps({"cases": []}))
         self.port = free_port()
         self.url = f"http://127.0.0.1:{self.port}"
         self.log = open(self.tmp / "server.log", "w")
@@ -121,11 +128,11 @@ class Sandbox:
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     # --- tiny HTTP client ---
-    def call(self, method, path, body=None, origin=None):
+    def call(self, method, path, body=None, origin=None, headers=None):
         data = None if body is None else (body if isinstance(body, (bytes, str)) else json.dumps(body))
         if isinstance(data, str):
             data = data.encode()
-        req = urllib.request.Request(self.url + path, data=data, method=method)
+        req = urllib.request.Request(self.url + path, data=data, method=method, headers=headers or {})
         if origin:
             req.add_header("Origin", origin)
         try:
@@ -160,5 +167,7 @@ def fingerprint(root):
     return out
 
 
-REC_REF = re.compile(r"\brec(?:ord)?s?\.?\s+#?(\d{1,12})\b", re.I)
+# 'rec 4861', 'records 566837, 566838 and 566839', 'recs 887107–887113', 'Records **1044–1047**':
+# group 1 holds every number of the list or range (markdown emphasis and backticks allowed around them).
+REC_REF = re.compile(r"\brec(?:ord)?s?\.?[\s*_`]+#?(\d{1,12}\b(?:[*_`]*\s*(?:,|–|—|-|&|\band\b|\bto\b|\bor\b)\s*[*_`]*#?\d{1,12}\b)*)", re.I)
 LINE_REF = re.compile(r"\b([\w.-]+\.jsonl):(\d+)\b")

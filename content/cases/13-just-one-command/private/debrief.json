@@ -1,0 +1,12 @@
+{
+  "from": "Priya Nandakumar, SOC Team Lead",
+  "common": "**From:** Priya Nandakumar  \n**To:** Cody  \n**Subject:** RE: Northgate Vets: \"I only ran one command\"\n\nCody,\n\nRhys pulled the PC's network cable remotely at 19:40 and drove in anyway. Dee had our threat-intel contact fetch the paste in a sandbox. The scriptlet was short: it opened a command shell and then tried to download a second-stage program from another site. That second download failed because the site had already been taken down. Lucky, not clever.\n\nJo found the forum post again. It was on a hijacked printer-support forum, posted by an account created that morning, and four other people had replied \"thanks, worked for me\". Rhys has reported it, and we've passed the paste URL to the paste site's abuse team.\n\nJo was mortified. Rhys told her she did exactly the right thing by ringing him straight away, and I agree. Your report helped there: it said plainly that her account matched the evidence. People report faster when they aren't afraid of being blamed.",
+  "by_grade": {
+    "S": "Excellent. You caught the impossible timestamp and handled it the right way: noted it, explained it, and didn't let it break your timeline. And you didn't touch the URL. That's discipline, and it's not common.",
+    "A": "Strong work. The chain and the verdict were right. Check the reference for what you missed. If it was the clock on the network event, go back and stare at it until it bothers you.",
+    "B": "Good effort, with gaps. Every switch on that regsvr32 command line means something. Look each one up and write a sentence on it. Then reread the network event against the process events, field by field.",
+    "C": "You saw the danger, but the report didn't prove enough. Sometimes it blamed the user without evidence, or said what the script did when nothing in the data shows it. Reset and write only what the three records actually say.",
+    "D": "Rough one. Reset it, open LOLBAS, and read the regsvr32 entry before you look at the data again. Then build the tree by hand from the GUIDs. The case is three events, and each one is worth a few minutes."
+  },
+  "next": ""
+}

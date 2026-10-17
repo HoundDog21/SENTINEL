@@ -1,0 +1,12 @@
+{
+  "from": "Priya Nandakumar, SOC Team Lead",
+  "common": "**From:** Priya Nandakumar  \n**To:** Cody  \n**Subject:** RE: Halloran CCU: whoami on the DC\n\nCody,\n\nI phoned Halloran's head of IT with your report open and read her the first paragraph. She stopped me after \"unauthenticated SYSTEM shell on the domain controller\" and called their incident-response retainer.\n\nHere's what the responders found. `osk.exe` on DC1 had been swapped for `cmd.exe` five weeks earlier, using a domain admin account whose password had been reused on a VPN appliance that was breached last year. DC1 had RDP open to the branch network with Network Level Authentication turned off. So anyone on any branch PC could bring up the logon screen, click the accessibility button and get a SYSTEM prompt. Session 2 was an RDP connection from a teller PC in the Eastfield branch, which was itself compromised.\n\nBernadette was right that nobody was logged on. She just didn't know that this backdoor doesn't need anyone to be. She took it well, and she's the one who found the second backdoored DC.\n\nHalloran are rebuilding both DCs and resetting every credential in the domain. It'll be a long fortnight for them. Without your report it would have been a lot longer.",
+  "by_grade": {
+    "S": "Outstanding. You read the Description field like you'd never seen the file name, you didn't let a RuleName do your thinking, and you turned \"nobody was logged on\" from an objection into evidence. That's senior-level reasoning.",
+    "A": "Very good. You caught the backdoor and got the severity right. Look at the reference for the finer points. Usually it's the IFEO-versus-replacement distinction, or how far to trust the LogonUI event.",
+    "B": "You got there, but not all the way. The most important field in this case is one line in rec 18917. Make sure you can explain exactly why it gives the attack away, and why the client's claim doesn't help them.",
+    "C": "You saw the backdoor but didn't land the consequences. A SYSTEM shell on a *domain controller* with no authentication is about as serious as it gets, and the report needs to say so plainly. Reset and work steps 5 and 8 again.",
+    "D": "This one slipped past you. Reset it and read every field of rec 18917 aloud, slowly. When you get to Description, ask whether it matches the file name. Then look up what Utilman.exe is."
+  },
+  "next": ""
+}

@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 10, "text": "Survey: two events about 31 ms apart (rec 566836 and rec 566840), with records 566837–566839 missing, so the export isn't the full log" },
+    { "points": 10, "text": "Identified the actor as EXAMPLE\\Administrator, the domain's built-in RID-500 account, in logon session 0x17e2d2, and did not treat the System ProcessID (the Security log writer) as the process that created the task" },
+    { "points": 15, "text": "Read the task XML: a hidden task running cmd /C tasklist as LocalSystem (S-1-5-18, HighestAvailable), with a daily trigger whose start date is in 2015" },
+    { "points": 15, "text": "Explained the output redirect to %windir%\\Temp\\CYAlyNSS.tmp (named after the task, 2>&1) as output capture for someone who can't see the screen, i.e. a remote-execution pattern" },
+    { "points": 10, "text": "Explained that a task living about 31 ms is a way to run one command as SYSTEM and clean up (started on demand if it ran), not persistence" },
+    { "points": 10, "text": "Did not claim the task ran or what tasklist returned, and named the logs that would show it (Task Scheduler Operational, process creation, file events)" },
+    { "points": 15, "text": "Weighed the patch-tool theory against the evidence (reconnaissance command, random name, hidden, 2015 date, built-in Administrator) and reached a justified verdict; any mention of a public tool template was presented as context, not proof" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. the missing records, the logon source, whether it ran, the output)" },
+    { "points": 5,  "text": "Recommended finding the 4624 for logon 0x17e2d2, checking the patch tool's records, and treating the Administrator credentials as compromised" }
+  ]
+}

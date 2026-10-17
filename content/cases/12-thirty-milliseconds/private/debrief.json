@@ -1,0 +1,12 @@
+{
+  "from": "Dee, Senior Analyst",
+  "common": "**From:** Dee  \n**To:** Cody  \n**Subject:** RE: Brightwater: blink-and-you-miss-it task\n\nCody,\n\nI sent your report to Fiona with one question added: *\"Can you show me the patch tool's job log for 00:02?\"*\n\nShe could. The patch tool's window is 22:00 to 23:30, and it ran nothing after 23:12 that night. It also uses its own service account, `svc-patch`. It has never used `Administrator`.\n\nTheir full Security log had the rest. The logon session `0x17e2d2` was a network logon from a finance laptop that had been phished the week before. Whoever was on it had the domain Administrator's password, which turned out to be the same one that was set up in 2014 and saved in a spreadsheet on a file share. The three missing records were privilege-use and object-access events from the same session.\n\nBrightwater have reset the password, rebuilt the laptop, and their patch tool now alerts if anyone else creates tasks with its naming pattern. Fiona also asked if we could teach her team to read task XML. I said you'd be happy to.",
+  "by_grade": {
+    "S": "Great report. You read every section of the XML, you caught that the System ProcessID isn't the actor, and you weighed Fiona's theory fairly instead of just dismissing it. That's how you keep a client's trust when you tell them they're wrong.",
+    "A": "Really solid. The verdict and the key evidence were right. Look at the reference for what you missed. My guess is the record gap or the System ProcessID, which are both easy to skip in a two-event export.",
+    "B": "Decent, but you left points behind. On short exports every field matters. Go back through the task XML line by line and ask \"why would someone set this?\" for each one.",
+    "C": "You got that something was off, but the report either took the patch-tool story at face value or rejected it without showing why. Reset it and do the two-column exercise from the hints with every field you can find.",
+    "D": "Tough one. Reset it, unescape the task's action by hand, and look up every element in the Task Scheduler XML schema before you open a hint. Once you can read that XML, this case is short."
+  },
+  "next": ""
+}

@@ -2,7 +2,7 @@
 import json
 import unittest
 
-from helpers import R_CAMPAIGN, R_CASES, Sandbox, case_dirs, case_id, server
+from helpers import R_CAMPAIGN, R_CASES, R_LIBRARY, Sandbox, case_dirs, case_id, server
 from browser.common import Page, needs_browser
 
 
@@ -118,6 +118,61 @@ class PlayEveryCase(unittest.TestCase):
             self.assertEqual(P.errors, [], "browser errors")
 
 
+def first_case_id():
+    camp = server.read_json(server.CAMPAIGN, {"chapters": []})
+    lib = server.read_json(server.LIBRARY, {"cases": []}).get("cases", [])
+    return next((c["case"] for c in camp["chapters"] if c.get("case")), None) or (lib[0]["case"] if lib else None)
+
+
+@needs_browser
+class Regressions(unittest.TestCase):
+    """Bugs that were fixed once and must stay fixed."""
+
+    def open_case(self, sb, pg, cid):
+        pg.goto(f"{sb.url}/#/case/{cid}")
+        if server.read_text(server.CASES / cid / "story.md").strip():
+            pg.wait_for_selector("#dialog[open]")
+            pg.click("#dialog-ok")           # accepting the briefing leaves the dialog's returnValue at "ok"
+        pg.wait_for_selector("tr.row")
+
+    def test_backing_out_of_submit_does_not_submit(self):
+        cid = first_case_id()
+        if not cid:
+            self.skipTest("no published case")
+        with Sandbox(unlock_all=True) as sb, Page() as P:
+            pg = P.page
+            self.open_case(sb, pg, cid)
+            for how in ("close()", "Escape"):
+                pg.evaluate("document.querySelector('#dialog').returnValue = 'ok'")   # as if the last dialog was OK'd
+                pg.click('#casebar button:has-text("Submit report")')
+                pg.wait_for_selector("#dialog[open]")
+                if how == "Escape":
+                    pg.keyboard.press("Escape")
+                else:                            # how the spec says Esc closes a dialog: no new returnValue
+                    pg.evaluate("document.querySelector('#dialog').close()")
+                pg.wait_for_timeout(400)
+                self.assertFalse(pg.evaluate("S.state.submitted"), f"closing the submit dialog with {how} submitted the report")
+            self.assertFalse(sb.get(f"/api/cases/{cid}")[1]["state"]["submitted"])
+            self.assertEqual(P.errors, [])
+
+    def test_a_note_is_saved_even_if_you_leave_straight_away(self):
+        cid = first_case_id()
+        if not cid:
+            self.skipTest("no published case")
+        with Sandbox(unlock_all=True) as sb, Page() as P:
+            pg = P.page
+            self.open_case(sb, pg, cid)
+            pg.locator("tr.row").first.click()
+            pg.click('[data-w="detail"] button:has-text("Add to evidence")')
+            pg.fill('[data-w="detail"] textarea', "typed just before leaving")
+            pg.evaluate("location.hash = ''")    # leave before the note's save timer fires
+            pg.wait_for_selector("#home:not(.hidden)")
+            pg.wait_for_timeout(1000)
+            saved = json.loads((sb.root / R_CASES / cid / "bookmarks.json").read_text())
+            self.assertEqual(saved[0]["note"], "typed just before leaving")
+            self.assertEqual(P.errors, [])
+
+
 @needs_browser
 class HQ(unittest.TestCase):
     def test_hq_shows_the_campaign(self):
@@ -130,4 +185,19 @@ class HQ(unittest.TestCase):
             for ch in camp["chapters"]:
                 self.assertIn(ch["title"], pg.locator("#home").inner_text())
             self.assertEqual(pg.locator("#tutorial-btn").count(), 1)
+            lib = json.loads((sb.root / R_LIBRARY).read_text())["cases"]
+            self.assertEqual(pg.locator(".lib-card").count(), len(lib), "every library case has a card")
+            for e in lib:
+                self.assertIn(e["teaser"], pg.locator("#home").inner_text())
+            if lib:
+                pg.fill(".lib-filters input[type=search]", "zzzz-no-such-case")
+                self.assertEqual(pg.locator(".lib-card").count(), 0, "search filters the cards")
+                self.assertIn("No cases match", pg.locator(".lib-grid").inner_text())
+                pg.fill(".lib-filters input[type=search]", "")
+                pg.click('.lib-filters button:has-text("Completed")')
+                self.assertEqual(pg.locator(".lib-card").count(), 0, "status filter: nothing is completed yet")
+                pg.click('.lib-filters button:has-text("Any status")')
+                pg.locator(".lib-card").first.click()
+                pg.wait_for_selector("#console:not(.hidden)")
+                self.assertIn(f"#/case/{lib[0]['case']}", pg.url)
             self.assertEqual(P.errors, [])

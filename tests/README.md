@@ -17,7 +17,7 @@ You don't write tests for a new case. Every folder in `content/cases/`, plus the
 |---|---|
 | `case check` is clean | Missing files, leftover TODOs, broken rubric/debrief JSON, events that won't load, Event IDs with no label in `app/eventids.json` |
 | Data loads | Unreadable lines, events with no timestamp, duplicate keys |
-| Answer key cites real records | `rec 4961` when the data has no such record (a gap the key calls missing is fine) |
+| Answer key cites real records | `rec 4961` when the data has no such record (a gap the key calls missing is fine). Lists and ranges (`recs 9826, 9827`, `Records **1044–1047**`) are checked number by number |
 | `file:line` references exist | Citations of a file or line that isn't in `data/` |
 | Brief lists every data file | A `data/*.jsonl` the learner is never told about |
 | Brief hashes match | A wrong `SHA-256 \`…\`` in the Evidence table |
@@ -33,10 +33,10 @@ You don't write tests for a new case. Every folder in `content/cases/`, plus the
 
 | File | Covers |
 |---|---|
-| `test_cases.py` | The per-case tests above, plus campaign structure (chapters numbered 1…N, no case twice, playable chapters first) and ranks |
-| `test_pipeline.py` | Every input format `tools/case.py` accepts, using the samples in `fixtures/`; the local-time-to-UTC fix; refusals (unknown JSON, XML entities, unsupported files); ZIPs read safely; `new → check → publish` with every guard; `add-data` and `survey` |
-| `test_server.py` | Static files and path traversal; the event catalog; cross-origin writes refused; only `worksheet.md`/`report.md` writable; chapter locking and XP; the tutorial never touching real cases, XP or its own template |
-| `browser/test_play_cases.py` | The browser playthrough for every case, and the HQ screen |
+| `test_cases.py` | The per-case tests above (each case in its own subtest, so one failure never hides another), plus campaign structure (chapters numbered 1…N, no case twice, playable chapters first), the Case library (no duplicates, no chapter cases, real teasers) and ranks |
+| `test_pipeline.py` | Every input format `tools/case.py` accepts, using the samples in `fixtures/`; the local-time-to-UTC fix; refusals (unknown JSON, XML entities, unsupported files); ZIPs read safely; `new → check → publish` (chapter and library) with every guard; neutral file names; `add-data` and `survey` (every user named) |
+| `test_server.py` | Static files and path traversal; the event catalog; cross-origin writes and foreign `Host` headers refused; only `worksheet.md`/`report.md` writable; malformed requests answered with 400 (never a dropped connection or a stuck thread); hints, steps and rubric items counted once each; chapter locking and XP; the Case library (listing, no locks, XP counted once, nothing private leaked); the tutorial never touching real cases, XP or its own template |
+| `browser/test_play_cases.py` | The browser playthrough for every case; the HQ screen and Case library filters; regressions (backing out of the submit dialog never submits, a note typed just before leaving a case is still saved) |
 | `browser/test_tutorial.py` | The guided tour end to end, around 90 checks: every step and practice task, Back/Skip/resume/replay, and your prefs, XP and case files left alone |
 
 Set `SENTINEL_SHOTS=/some/folder` to save screenshots from the tutorial test.

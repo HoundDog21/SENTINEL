@@ -12,6 +12,10 @@ You're **Cody**, a new night-shift hire at **Ironlantern Security**, a fictional
 
 The story never adds evidence. What characters tell you is a claim; only the logs are evidence.
 
+## Case library
+
+Below the campaign, the HQ screen lists the **Case library**: standalone tickets from Ironlantern's queue. They're never locked, so play them in any order, and each one earns XP like a chapter. Search them, or filter by level and by status (new, in progress, completed). The filters are remembered in your browser.
+
 ## Tutorial
 
 New to the console? Press **Tutorial** on the HQ screen. It opens a practice case, "A Quiet Morning": six harmless events from a training PC where someone opens Notepad and saves a file. A guided tour highlights each widget and control in turn, and **Try it** tasks let you practice adding evidence, building a process tree, flagging an IOC and submitting a report. Use **Next**, **Back** and **Skip tour**. **🎓 Tour** in the case bar brings it back.
@@ -20,7 +24,7 @@ The tutorial never touches your real cases, XP, rank or saved layout. The templa
 
 ## Working a case
 
-1. Pick a chapter from the **Campaign** list on the HQ screen and read **Alert & brief**.
+1. Pick a chapter from the **Campaign** list or a case from the **Case library** on the HQ screen, and read **Alert & brief**.
 2. Work the **Playbook** and tick off tasks. Open **Hints** one at a time if stuck (the app counts how many you used).
 3. Explore **Events** and **Event detail**: every raw field is there. Hover a field to **pivot** (search all events for it) or add it to your IOCs. **Add to evidence** and write a note on each item.
 4. **Process tree** and **IOCs** start empty, and you fill them in. Add processes with **⑂ Add to tree**, then pick each one's parent yourself by matching `ParentProcessGuid` to `ProcessGuid`. Add a "not in evidence" node for parents that aren't in the data. Add IOCs from Event detail or by pasting a value. The app never works out relationships or indicators for you.
@@ -34,4 +38,4 @@ The tutorial never touches your real cases, XP, rank or saved layout. The templa
 - **Layout ▾**: Triage, Investigate and Report presets. Any change you make is saved as **My layout**.
 - **Lock** stops accidental moves. **⚙** sets accent color and density. **Columns ▾** in Events picks table columns.
 
-Layout and appearance are remembered in your browser. Case work is saved as plain files in the case's folder under `content/cases/` (`worksheet.md`, `report.md`, `bookmarks.json`, `iocs.json`, `tree.json`, `activity.json`).
+Layout and appearance are remembered in your browser. Case work is saved as plain files in the case's folder under `content/cases/` (`worksheet.md`, `report.md`, `bookmarks.json`, `iocs.json`, `tree.json`, `activity.json`). The progress files (`state.json`, `bookmarks.json`, `iocs.json`, `tree.json`, `activity.json`) are gitignored, so your play-through isn't committed with the cases.

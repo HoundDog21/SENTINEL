@@ -1,0 +1,33 @@
+{
+  "_about": "Standalone cases shown in the Case library on the HQ screen, in this order. Add one with: ./sentinel case publish ID --library --teaser \"...\"",
+  "cases": [
+    {
+      "case": "11-the-intranet-box",
+      "teaser": "A dental group's staff intranet server did something at half past one in the morning. Their IT manager says the portal is internal-only and it was probably a maintenance job."
+    },
+    {
+      "case": "12-thirty-milliseconds",
+      "teaser": "A housing charity's SIEM caught something on a server that appeared and vanished almost instantly, just after midnight. Their IT team says their patch tool does that all the time."
+    },
+    {
+      "case": "13-just-one-command",
+      "teaser": "A receptionist at a vet practice followed an online guide to fix the label printer. She says she ran one command, nothing happened, and then she rang IT."
+    },
+    {
+      "case": "14-nothing-was-installed",
+      "teaser": "A print shop's design workstation ran a Windows utility with a web address attached. The owner says the user has no admin rights, so nothing could have been installed."
+    },
+    {
+      "case": "15-before-anyone-logged-in",
+      "teaser": "A credit union's domain controller ran a command as SYSTEM in the middle of the afternoon. Their sysadmin checked straight away: nobody was logged on."
+    },
+    {
+      "case": "16-a-clean-slate",
+      "teaser": "Someone cleared the Security log on a food distributor's server during the evening. The client says it was an admin tidying up, and you've been sent the next few seconds of events."
+    },
+    {
+      "case": "17-remote-hands",
+      "teaser": "A paralegal's workstation started running commands well after she'd gone home. The firm's sysadmin says their inventory tool sometimes trips the alarm in the evenings."
+    }
+  ]
+}

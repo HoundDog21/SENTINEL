@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case17-sysmon.jsonl",
+      "original": "data/case17-sysmon.evtx",
+      "from": "LM_wmiexec_impacket_sysmon_whoami.evtx",
+      "via": null,
+      "sha256": "21b8852b2b386f4d3f6f0c8a7304de8e628bb43cfa23888ab317b95b784ffe59",
+      "format": "EVTX (chainsaw dump)",
+      "events": 7,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

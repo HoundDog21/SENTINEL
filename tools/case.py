@@ -6,6 +6,7 @@
     ./sentinel case survey 02-echoes          # rewrite private/author-notes.md
     ./sentinel case check 02-echoes           # what's missing or broken
     ./sentinel case publish 02-echoes --chapter 2
+    ./sentinel case publish 12-quiet-share --library --teaser "A file server…"
     ./sentinel case list
 
 Accepted inputs (each is converted to the one JSONL shape the app reads):
@@ -38,7 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "app"))
 import server  # noqa: E402  (reuse the app's own loader so "check" sees exactly what the app sees)
 
-CASES, TEMPLATES, CAMPAIGN = server.CASES, server.TEMPLATES, server.CAMPAIGN   # paths are defined once, in app/server.py
+CASES, TEMPLATES, CAMPAIGN, LIBRARY = server.CASES, server.TEMPLATES, server.CAMPAIGN, server.LIBRARY   # paths are defined once, in app/server.py
 CASE_ID = re.compile(r"^\d{2}-[a-z0-9][a-z0-9-]*$")
 GRADES = [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]]
 MAX_MEMBER = 300_000_000
@@ -361,18 +362,34 @@ def meta_of(d):
     return server.read_json(d / "private" / "case.json", {"sources": []})
 
 
-def add_data(d, paths, tz_hours=None):
+def neutral_stem(cid, records):
+    """Public datasets often name files after the technique (e.g. 'LM_typical_IIS_webshell…'), which would
+    give the case away in the Evidence table. Name files after the case and the main log instead."""
+    cat = server.catalog()
+    names = Counter()
+    for r in records:
+        ch = str(((r.get("Event") or {}).get("System") or {}).get("Channel") or "").lower()
+        hit = next((c for c in cat.get("channels", []) if (c.get("exact") and ch == c["exact"].lower())
+                    or (c.get("contains") and c["contains"].lower() in ch)), None)
+        names[(hit or {}).get("name") or ch.split("/")[0].split("-")[-1] or "data"] += 1
+    main = names.most_common(1)[0][0] if names else "data"
+    slug = {"Program Compatibility Assistant": "pca"}.get(main) or re.sub(r"[^a-z0-9]+", "-", main.lower()).strip("-") or "data"
+    return f"case{cid[:2]}-{slug}"
+
+
+def add_data(d, paths, tz_hours=None, cid=None, keep_names=False):
     """Convert inputs into d/data/<stem>.jsonl, keep originals, verify every event loads in the app."""
+    cid = cid or d.name
     (d / "data" / "source").mkdir(parents=True, exist_ok=True)
     meta = meta_of(d)
     added = []
     cols = server.catalog().get("columns", {})
     for p in paths:
         for item in ingest(p, tz_hours):
-            stem = item["stem"]
-            n = 2
+            base_stem = item["stem"] if keep_names else neutral_stem(cid, item["records"])
+            stem, n = base_stem, 2
             while (d / "data" / f"{stem}.jsonl").exists():
-                stem = f"{item['stem']}-{n}"
+                stem = f"{base_stem}-{n}"
                 n += 1
             out = d / "data" / f"{stem}.jsonl"
             lines = [json.dumps(r, ensure_ascii=False, separators=(",", ":")) for r in item["records"]]
@@ -450,8 +467,10 @@ def survey_md(d, cid=None):
         L.append(f"| {ch} | {eid} | {lab or '**no label**'} | {n} |")
     hosts = Counter(e.get("host") for e in events)
     users = Counter(e.get("user") for e in events if e.get("user"))
+    shown_users = users.most_common(40)               # every name matters: an odd one is often the finding
+    more_users = f" … and {len(users) - len(shown_users)} more" if len(users) > len(shown_users) else ""
     L += ["", f"- **Events:** {len(events)}", f"- **Hosts:** {', '.join(f'`{h}` ({n})' for h, n in hosts.most_common())}",
-          f"- **Users:** {', '.join(f'`{u}` ({n})' for u, n in users.most_common(10)) or 'none in the data'}"]
+          f"- **Users:** {', '.join(f'`{u}` ({n})' for u, n in shown_users) + more_users or 'none in the data'}"]
     by_ch = defaultdict(list)
     for e in events:
         by_ch[e.get("channel")].append(e)
@@ -480,6 +499,8 @@ def survey_md(d, cid=None):
             ref = f"rec {e['record']}" if e.get("record") not in (None, "") else f"{e['source']}:{e['line']}"
             cmd = (e.get("cmd") or "").replace("|", "\\|")
             L.append(f"| {e['time']} | {ref} | `{e['image']}` | `{e['guid']}` | `{e['pguid']}`{'' if e['pguid'] in guids else ' (no process-create event)'} | `{e.get('pimage') or ''}` | `{cmd[:160]}` |")
+        if len(pcs) > 200:
+            L.append(f"\nOnly the first 200 of {len(pcs)} are listed.")
     if unlabeled:
         L += ["", "## Missing labels", "", "These channel/Event ID pairs have no label in `app/eventids.json`. Add them there (no code changes needed):", ""]
         L += [f"- `{ch}` · {eid}" for ch, eid in unlabeled]
@@ -712,7 +733,35 @@ def run_case_tests(cid):
         raise Fail(f"{cid} failed its tests (output above). Fix them, then publish again.")
 
 
+SPOILER = re.compile(r"\b[\w$@-]+\.(exe|dll|ps1|vbs|js|jse|bat|cmd|cpl|sct|hta|xsl|msi|scr|lnk)\b", re.I)
+
+
+def publish_library(d, teaser):
+    if not teaser or not teaser.strip():
+        raise Fail("a library case needs --teaser: one or two sentences on what the ticket is about, without naming the technique")
+    if SPOILER.search(teaser):
+        raise Fail(f"the teaser names a file ({SPOILER.search(teaser).group(0)}), which gives the case away. Describe the situation instead.")
+    camp = server.read_json(CAMPAIGN, {"chapters": []})
+    if any(c.get("case") == d.name for c in camp.get("chapters", [])):
+        raise Fail(f"{d.name} is a campaign chapter, so it can't also be in the library")
+    errors, _ = check(d)
+    if errors:
+        raise Fail("fix the errors above before publishing")
+    run_case_tests(d.name)
+    lib = server.read_json(LIBRARY, {"cases": []})
+    cases = lib.setdefault("cases", [])
+    entry = next((e for e in cases if e.get("case") == d.name), None)
+    if entry:
+        entry["teaser"] = teaser.strip()
+    else:
+        cases.append({"case": d.name, "teaser": teaser.strip()})
+    server.write_json(LIBRARY, lib)
+    print(f"{d.name} is {'updated' if entry else 'now'} in the Case library. Reload the app to see it.")
+
+
 def publish(d, chapter, title, teaser, difficulty, replace):
+    if d.name in {e.get("case") for e in server.read_json(LIBRARY, {"cases": []}).get("cases", [])}:
+        raise Fail(f"{d.name} is in the Case library, so it can't also be a chapter. Remove it from {LIBRARY.relative_to(ROOT)} first.")
     errors, _ = check(d)
     if errors:
         raise Fail("fix the errors above before publishing")
@@ -759,7 +808,7 @@ def cmd_new(a):
     try:
         (staging / "private").mkdir()
         print(f"Building {a.id}…")
-        add_data(staging, a.data, a.tz_offset)
+        add_data(staging, a.data, a.tz_offset, cid=a.id, keep_names=a.keep_names)
         write_skeleton(staging, a.id, a.title, a.severity, a.difficulty, a.budget)
         survey_md(staging, a.id)
         staging.rename(d)
@@ -777,7 +826,7 @@ Created {rel}/ with skeleton files. Next:
 
 def cmd_add(a):
     d = case_path(a.id)
-    add_data(d, a.files, a.tz_offset)
+    add_data(d, a.files, a.tz_offset, keep_names=a.keep_names)
     survey_md(d)
     print(f"Updated private/author-notes.md. The brief's Evidence table isn't rewritten: add the new files to it yourself.")
 
@@ -799,20 +848,27 @@ def cmd_check(a):
 
 
 def cmd_publish(a):
-    publish(case_path(a.id), a.chapter, a.title, a.teaser, a.difficulty, a.replace)
+    if a.library == (a.chapter is not None):
+        raise Fail("say where to publish: --chapter N or --library")
+    if a.library:
+        publish_library(case_path(a.id), a.teaser)
+    else:
+        publish(case_path(a.id), a.chapter, a.title, a.teaser, a.difficulty, a.replace)
 
 
 def cmd_list(a):
     camp = server.read_json(CAMPAIGN, {"chapters": []})
     by_case = {c.get("case"): c for c in camp.get("chapters", []) if c.get("case")}
-    print(f"{'Case':32} {'Chapter':28} Status")
+    in_lib = {e.get("case") for e in server.read_json(LIBRARY, {"cases": []}).get("cases", [])}
+    print(f"{'Case':32} {'Published as':28} Status")
     for p in sorted(CASES.iterdir()):
         if not (p.is_dir() and CASE_ID.match(p.name)):
             continue
         errors, warns = check(p, quiet=True)
         ch = by_case.get(p.name)
-        chap = f"{ch['n']}: {ch['title']}" if ch else "draft (not published)"
-        status = f"{len(errors)} error(s)" if errors else ("ready" if not ch else "live") + (f", {len(warns)} warning(s)" if warns else "")
+        chap = f"{ch['n']}: {ch['title']}" if ch else ("library" if p.name in in_lib else "draft (not published)")
+        live = ch or p.name in in_lib
+        status = f"{len(errors)} error(s)" if errors else ("live" if live else "ready") + (f", {len(warns)} warning(s)" if warns else "")
         print(f"{p.name:32} {chap[:28]:28} {status}")
     for c in camp.get("chapters", []):
         if not c.get("case"):
@@ -830,17 +886,20 @@ def main(argv=None):
     n.add_argument("--difficulty", default="Beginner")
     n.add_argument("--budget", default="1–2 hours", help="time budget shown in the brief")
     n.add_argument("--tz-offset", type=float, help="hours from UTC for local TimeCreated values in flat JSON (default: learn it)")
+    n.add_argument("--keep-names", action="store_true", help="keep the input file names (default: neutral names like case12-sysmon, since dataset names often give the technique away)")
     n.set_defaults(fn=cmd_new)
     ad = sub.add_parser("add-data", help="add more log files to a case")
     ad.add_argument("id"); ad.add_argument("files", nargs="+")
     ad.add_argument("--tz-offset", type=float)
+    ad.add_argument("--keep-names", action="store_true")
     ad.set_defaults(fn=cmd_add)
     sv = sub.add_parser("survey", help="rewrite private/author-notes.md")
     sv.add_argument("id"); sv.set_defaults(fn=cmd_survey)
     ck = sub.add_parser("check", help="list what's missing or broken (all cases if no id)")
     ck.add_argument("id", nargs="?"); ck.set_defaults(fn=cmd_check)
-    pb = sub.add_parser("publish", help="put a checked case into the campaign")
-    pb.add_argument("id"); pb.add_argument("--chapter", type=int, required=True)
+    pb = sub.add_parser("publish", help="put a checked case into the campaign or the Case library")
+    pb.add_argument("id"); pb.add_argument("--chapter", type=int)
+    pb.add_argument("--library", action="store_true", help="publish to the Case library (needs --teaser)")
     pb.add_argument("--title"); pb.add_argument("--teaser"); pb.add_argument("--difficulty")
     pb.add_argument("--replace", action="store_true", help="swap out the case a chapter already plays")
     pb.set_defaults(fn=cmd_publish)

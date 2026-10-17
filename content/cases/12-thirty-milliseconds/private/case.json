@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case12-security.jsonl",
+      "original": "data/case12-security.evtx",
+      "from": "temp_scheduled_task_4698_4699.evtx",
+      "via": null,
+      "sha256": "a7decf0fbabc340e37de7e7c39fddd5398a7106a4f6acded0ea1d2ffa6bf8b70",
+      "format": "EVTX (chainsaw dump)",
+      "events": 2,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

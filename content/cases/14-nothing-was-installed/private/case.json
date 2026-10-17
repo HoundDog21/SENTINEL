@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case14-sysmon.jsonl",
+      "original": "data/case14-sysmon.evtx",
+      "from": "sysmon_11_1_lolbas_downldr_desktopimgdownldr.evtx",
+      "via": null,
+      "sha256": "f63ea09964ad1b6cc1d1dab6d8203a96f4eae71dd4cddc5408719afdc6e861af",
+      "format": "EVTX (chainsaw dump)",
+      "events": 3,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

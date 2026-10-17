@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 10, "text": "Survey: three events, records 305353 and 305355 missing, and no network (Event ID 3) events at all, so the export is partial" },
+    { "points": 10, "text": "Process tree: cmd.exe with no arguments (no process-create event) → cmd /c (rec 305352) → desktopimgdownldr.exe (rec 305354), with svchost.exe kept separate rather than drawn as a child" },
+    { "points": 15, "text": "Researched desktopimgdownldr.exe: a genuine Windows lock-screen image downloader that can be abused to fetch any URL, and noted the URL points at a .7z archive on an anonymous file host, not an image" },
+    { "points": 15, "text": "Read the file event (rec 305356): svchost.exe, not the tool, wrote a new LockScreenImage_….7z in the user's Temp Personalization folder 1.4 s later, and explained it as a background download service (BITS) acting for the tool" },
+    { "points": 10, "text": "Separated the observed links between file and command (path, .7z extension, timing, same profile) from the inferred ones (same contents), noting there's no hash or network event" },
+    { "points": 10, "text": "Kept 'downloaded' separate from 'executed': nothing in the export shows the archive being opened, extracted or run" },
+    { "points": 10, "text": "Tested the client's claim: no admin rights is supported (Medium integrity, user-profile path), but downloading and running from the user's profile need no admin, so it doesn't make the activity safe" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. the archive's contents and hash, the missing records, who typed the command, what happened next)" },
+    { "points": 10, "text": "Classified it as a true positive, mapped it to T1105, and recommended collecting and analysing the archive before deciding on a wipe, plus isolating the workstation" }
+  ]
+}

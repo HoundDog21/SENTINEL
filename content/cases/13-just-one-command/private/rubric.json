@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 15, "text": "Process tree is correct: cmd.exe (no process-create event, PID 3528) → regsvr32.exe (rec 16792) → cmd.exe (rec 16793), with the network connection (rec 16794) attached to regsvr32.exe by ProcessGuid" },
+    { "points": 15, "text": "Explained the command line: /s silent, /u with /i calling DllInstall, /i: a paste URL, scrobj.dll downloading and running a scriptlet, i.e. regsvr32 used to proxy-execute remote script code" },
+    { "points": 10, "text": "Read the network connection: TCP to 104.20.208.21:80 over plain HTTP, matching the http:// URL, and noted the log doesn't prove which site answered (no hostname, no DNS)" },
+    { "points": 15, "text": "Noticed the network event's UtcTime (18:35:04.463) is earlier than regsvr32's creation (18:35:05.140), recognised that's impossible, and trusted the GUID link and record order instead of the sub-second clock" },
+    { "points": 10, "text": "Explained that the second cmd.exe was started by the downloaded code, not typed by the user" },
+    { "points": 10, "text": "Checked the user's account against the data (interactive cmd.exe parent, session 1, Medium integrity, home directory, /s explaining 'nothing happened') and judged it consistent, without blaming the user" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. the scriptlet's contents, what the child cmd.exe did, which site served it, persistence)" },
+    { "points": 10, "text": "Classified it as a true positive, mapped it to ATT&CK (e.g. T1218.010) and recommended isolating the host and having the paste fetched safely" },
+    { "points": 5,  "text": "Did not visit the URL, and didn't treat the shared CDN IP as a strong indicator on its own" }
+  ]
+}

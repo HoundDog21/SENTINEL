@@ -1,0 +1,15 @@
+{
+  "hint_penalty": 3,
+  "grades": [[90, "S"], [75, "A"], [60, "B"], [40, "C"], [0, "D"]],
+  "items": [
+    { "points": 15, "text": "Process tree is correct: w3wp.exe (no process-create event, PID 2580) → cmd.exe (rec 1044) → net.exe (rec 1046) → net1.exe (rec 1047)" },
+    { "points": 15, "text": "Identified w3wp.exe as the IIS worker process for DefaultAppPool (ASP.NET), running as IIS APPPOOL\\DefaultAppPool, and explained why a web application starting cmd.exe is abnormal" },
+    { "points": 10, "text": "Explained cmd /c net user as local account discovery, and net1.exe as net.exe's normal helper rather than a second attacker command" },
+    { "points": 15, "text": "Read the Event ID 10 (rec 1045) as w3wp.exe's handle on the cmd.exe it had just created (same time, same target GUID, 0x1fffff), not as injection or credential access" },
+    { "points": 10, "text": "Used the CallTrace (mscorwks, System, System.Web) to say the command came from code running inside the web application, and did not treat the UNKNOWN frames as proof of injected code" },
+    { "points": 10, "text": "Said the logs can't tell a web shell from command injection in the real application, and did not invent a web shell file name, URL or source IP" },
+    { "points": 5,  "text": "Noted the context: session 0, no interactive user, the IIS working directory, and the whole chain inside about 50 ms, without claiming the speed proves automation" },
+    { "points": 10, "text": "Listed at least three things the logs can't tell you (e.g. the request and its source, the command output, how the code got onto the server, what happened before or after)" },
+    { "points": 10, "text": "Classified it as a true positive, found nothing supporting the maintenance-job theory, and recommended containing the server, preserving IIS logs and the web root, and hunting for other w3wp.exe children" }
+  ]
+}

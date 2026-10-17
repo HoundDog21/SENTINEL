@@ -51,6 +51,9 @@ function confirmDialog(title, bodyNodes, okLabel = "OK", opts = {}) {
   $("#dialog-title").textContent = title;
   $("#dialog-body").replaceChildren(...bodyNodes.filter(Boolean));
   $("#dialog-ok").textContent = okLabel;
+  // Closing without a button (Esc, close()) leaves returnValue as it was, so clear the last dialog's
+  // "ok". Otherwise backing out of "Submit report?" or "Reset progress?" would go ahead anyway.
+  d.returnValue = "";
   d.showModal();
   // Autofocus lands on the button at the bottom; start long messages at the top.
   requestAnimationFrame(() => (d.scrollTop = 0));
@@ -377,7 +380,8 @@ window.addEventListener("hashchange", route);
 $("#go-home").onclick = () => (location.hash = "");
 
 async function route() {
-  const id = decodeURIComponent(location.hash.replace(/^#\/?case\//, ""));
+  let id = "";
+  try { id = decodeURIComponent(location.hash.replace(/^#\/?case\//, "")); } catch { /* malformed %-escape: go home */ }
   const tutorial = location.hash === "#/tutorial";
   const target = tutorial ? "tutorial" : location.hash.startsWith("#/case/") && id ? id : null;
   if (S.cid && target !== S.cid && Object.values(S.dirty).some(Boolean)) {
@@ -404,13 +408,61 @@ async function showHome() {
   $("#home").classList.remove("hidden");
   $("#crumb").textContent = "";
   try {
-    renderHQ(await api("/api/profile"));
+    const [pf, lib] = await Promise.all([api("/api/profile"), api("/api/library").catch(() => [])]);
+    renderHQ(pf, lib);
   } catch (e) {
     $("#home").replaceChildren(h("p", { class: "alert" }, "Could not load your profile: " + e.message));
   }
 }
 
-function renderHQ(pf) {
+// Case library: standalone cases, any order. Filters are remembered per browser.
+const LIB_KEY = "sentinel.library.v1";
+function renderLibrary(lib) {
+  const f = Object.assign({ q: "", level: "all", status: "all" }, store.get(LIB_KEY, {}));
+  const level = (c) => (/advanced/i.test(c.difficulty) ? "advanced" : /intermediate/i.test(c.difficulty) ? "intermediate" : "beginner");
+  const list = h("div", { class: "lib-grid" });
+  const count = h("span", { class: "muted small" });
+  const draw = () => {
+    store.set(LIB_KEY, f);
+    const q = f.q.trim().toLowerCase();
+    const shown = lib.filter((c) => (f.level === "all" || level(c) === f.level) && (f.status === "all" || c.status === f.status)
+      && (!q || `${c.title} ${c.teaser} ${c.data} ${c.difficulty}`.toLowerCase().includes(q)));
+    count.textContent = shown.length === lib.length ? `${lib.length} case${lib.length === 1 ? "" : "s"}` : `${shown.length} of ${lib.length}`;
+    list.replaceChildren(...(shown.length ? shown.map((c) => h("button", {
+      class: "lib-card " + c.status, onclick: () => (location.hash = "#/case/" + encodeURIComponent(c.case)),
+      title: "Open " + caseCode(c.case),
+    },
+      h("div", { class: "lib-top" },
+        h("span", { class: "case-id" }, caseCode(c.case)),
+        h("span", { class: "pill " + sevClass(c.severity) }, c.severity),
+        h("span", { class: "spacer" }),
+        c.status === "completed"
+          ? (c.grade ? h("span", { class: "ch-result" }, h("span", { class: "grade grade-" + c.grade }, c.grade), `${c.score} XP`) : h("span", { class: "pill done plain" }, "Submitted · score it"))
+          : c.status === "in-progress" ? h("span", { class: "pill plain lib-wip" }, "In progress") : h("span", { class: "pill plain lib-new" }, "New")),
+      h("div", { class: "lib-title" }, c.title),
+      h("div", { class: "lib-teaser" }, c.teaser),
+      h("div", { class: "lib-meta" },
+        h("span", { class: "lib-level lv-" + level(c) }, c.difficulty || "Beginner"),
+        c.budget ? h("span", {}, "⏱ " + c.budget) : null,
+        c.data ? h("span", { class: "lib-data", title: c.data }, c.data) : null)))
+      : [h("p", { class: "empty" }, lib.length ? "No cases match these filters." : "No library cases yet.")]));
+  };
+  const seg = (key, opts) => h("div", { class: "seg" }, opts.map(([v, label]) => h("button", {
+    class: f[key] === v ? "on" : "", onclick: (e) => { f[key] = v; $$("button", e.target.parentNode).forEach((b) => b.classList.toggle("on", b === e.target)); draw(); },
+  }, label)));
+  const search = h("input", { type: "search", placeholder: "Search titles and descriptions", value: f.q, oninput: (e) => { f.q = e.target.value; draw(); } });
+  draw();
+  return [
+    h("div", { class: "hq-h lib-h" }, h("span", {}, "Case library"), count),
+    h("p", { class: "muted small lib-intro" }, "Standalone tickets from Ironlantern's queue. Pick any, in any order. Each one earns XP like a chapter."),
+    h("div", { class: "lib-filters" }, search,
+      seg("level", [["all", "All levels"], ["beginner", "Beginner"], ["intermediate", "Intermediate"], ["advanced", "Advanced"]]),
+      seg("status", [["all", "Any status"], ["new", "New"], ["in-progress", "In progress"], ["completed", "Completed"]])),
+    list,
+  ];
+}
+
+function renderHQ(pf, lib = []) {
   const nxt = pf.next_rank;
   const pct = nxt ? Math.round(((pf.xp - pf.rank.xp) / (nxt.xp - pf.rank.xp)) * 100) : 100;
   const stat = (n, label) => h("div", { class: "stat" }, h("b", {}, n), h("span", {}, label));
@@ -453,11 +505,11 @@ function renderHQ(pf) {
         h("div", { class: "ch-title" }, ch.title),
         h("div", { class: "ch-teaser" }, ch.teaser)),
       h("div", { class: "ch-side" }, side(ch))))),
+    ...renderLibrary(lib),
   );
 }
 
 // =====================================================================
-// case// =====================================================================
 // case
 // =====================================================================
 
@@ -504,7 +556,8 @@ async function openCase(id) {
 async function showStory(first) {
   const box = h("div", { class: "md story" });
   box.innerHTML = md(S.data.story);
-  await confirmDialog(`📨 Incoming · Chapter ${S.data.chapter?.n ?? ""}: ${S.data.chapter?.title ?? S.data.title}`, [box],
+  const heading = S.data.chapter ? `Chapter ${S.data.chapter.n}: ${S.data.chapter.title}` : `${caseCode(S.cid)}: ${S.data.title.replace(/^Case\s+\d+:\s*/, "")}`;
+  await confirmDialog(`📨 Incoming · ${heading}`, [box],
     first ? "Accept case" : "Close", { cancel: false, wide: true });
   if (first) {
     const r = await put(caseApi("/state"), { story_seen: true });
@@ -805,7 +858,14 @@ function saveNote(key, text) {
   if (!b) return;
   b.note = text;
   clearTimeout(noteTimer);
-  noteTimer = setTimeout(async () => { await saveBookmarks(); renderEvidence(); flash("Note saved"); }, 500);
+  // Save to the case the note was typed in, even if you've left it before the timer fires.
+  const cid = S.cid, list = S.bookmarks;
+  noteTimer = setTimeout(async () => {
+    try { await put(`/api/cases/${encodeURIComponent(cid)}/doc/bookmarks`, list); }
+    catch (e) { return flash("Could not save your note: " + e.message, false); }
+    if (S.cid === cid) renderEvidence();
+    flash("Note saved");
+  }, 500);
 }
 
 function renderEvidence() {

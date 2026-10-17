@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case18-sysmon.jsonl",
+      "original": "data/case18-sysmon.evtx",
+      "from": "sysmon_10_1_memdump_comsvcs_minidump.evtx",
+      "via": null,
+      "sha256": "d1bf591cabf7d21f49936150bfaf433da7665211ba3fd00bc806f4912a6f96b4",
+      "format": "EVTX (chainsaw dump)",
+      "events": 6,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Hands-on DFIR labs. Investigate real recorded attack telemetry, write an incident report, then check it against an answer key.
 
-You play **Cody**, a new night-shift analyst at **Ironlantern Security**, a fictional managed detection and response company. Each case is a chapter in a story campaign. The app shows you the evidence and stores your work. You do the investigating.
+You play **Cody**, a new night-shift analyst at **Ironlantern Security**, a fictional managed detection and response company. Each case is a chapter in a story campaign, or a standalone ticket in the Case library. The app shows you the evidence and stores your work. You do the investigating.
 
 ## Quick start
 
@@ -35,6 +35,7 @@ Sentinel/
 │   └── static/                  the web console (HTML, JS, CSS)
 ├── content/                     everything authored: no code
 │   ├── campaign.json            chapters, ranks and XP thresholds
+│   ├── library.json             the Case library: standalone cases, playable in any order
 │   ├── cases/                   one folder per case
 │   ├── tutorial/practice/       the tutorial's practice case
 │   ├── templates/               blank worksheet and report

@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case16-security.jsonl",
+      "original": "data/case16-security.evtx",
+      "from": "kerberos_pwd_spray_4771.evtx",
+      "via": null,
+      "sha256": "4a0a1c7132e216dbc704c806e9429df9ae3ac00485d5238e50c776e3099ae11d",
+      "format": "EVTX (chainsaw dump)",
+      "events": 12,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}

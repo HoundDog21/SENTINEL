@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "data/case13-sysmon.jsonl",
+      "original": "data/case13-sysmon.evtx",
+      "from": "exec_sysmon_lobin_regsvr32_sct.evtx",
+      "via": null,
+      "sha256": "d6978888a7dead4523c01df417aa7ea6ad2599a5bbf1acd05d89882aac956442",
+      "format": "EVTX (chainsaw dump)",
+      "events": 3,
+      "notes": [],
+      "added": "2026-10-17T00:16:50Z"
+    }
+  ]
+}
